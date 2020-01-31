@@ -1,0 +1,24 @@
+sudo: required
+script:
+    - docker
+
+
+before_install:
+    - docker build -t schemido/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true  schemido/react-rest npm test
+
+after_success:
+    - docker build -t schemido/multi-client ./client
+    - docker build -t schemido/multi-nginx ./nginx
+    - docker build -t schemido/multi-server ./server
+    - docker build -t schemido/multi-worker ./worker
+# log in to docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+# take images and push to docker hub
+    - docker push schemido/multi-client
+    - docker push schemido/multi-nginx
+    - docker push schemido/multi-server
+    - docker push schemido/multi-worker
+
